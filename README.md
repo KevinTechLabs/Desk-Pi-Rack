@@ -70,24 +70,6 @@ The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP 
 | [Server hardening](network/server-hardening.md) | ufw, fail2ban, Docker/Portainer exposure |
 | [Maintenance](network/maintenance.md) | Routine tasks, isolation tests, backups, lessons learned |
 
-## Planned Documentation
 
-- [x] Network topology
-- [x] Router/access-point configuration
-- [x] pfSense firewall details
-- [x] Switch model and configuration
-- [x] Hostnames and IP addressing (example addressing only)
-- [x] Backup and maintenance notes
-- [ ] Rack layout and U positions
-- [ ] Minisforum Docker host and container inventory
-- [ ] 24/7 AI server software and LLM configuration
-- [ ] Beelink Kali Linux configuration
-- [ ] Raspberry Pi OS and configuration
-- [ ] Power supplies and power distribution
-- [ ] PDU outlet assignments
-- [ ] Cooling and cable management
-- [ ] KVM port assignments
 
-## Security Note
 
-Do not commit passwords, API keys, private keys, Wi-Fi passwords, VPN secrets, or other credentials to this repository. Avoid publishing public IP addresses or other sensitive network information unless intentionally documented.
