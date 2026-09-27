@@ -55,23 +55,38 @@ A separate desktop PC is used as a dedicated **24/7 AI server**.
 
 This inventory is a work in progress. Specifications that have not yet been provided are intentionally marked **TBD** rather than guessed.
 
+## Network & Security
+
+The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP reputation blocking and intrusion detection. All addresses in these documents are **example addresses**.
+
+| Document | Contents |
+|---|---|
+| [Network topology](network/topology.md) | Overview diagram and zones at a glance |
+| [Zones (VLANs)](network/zones.md) | Subnets, DHCP, device placement, what each zone can reach |
+| [pfSense firewall](network/firewall.md) | Router hardening, per-zone rules, forced DNS, pfBlockerNG, Suricata, logging |
+| [DNS](network/dns.md) | Pi-hole → pfSense resolver with DNSSEC; blocking DNS bypass |
+| [Switch](network/switch.md) | TL-SG108E 802.1Q VLANs and port map |
+| [Wi-Fi access point](network/wifi-ap.md) | GL.iNet Flint 3 multi-SSID VLAN setup in AP mode |
+| [Server hardening](network/server-hardening.md) | ufw, fail2ban, Docker/Portainer exposure |
+| [Maintenance](network/maintenance.md) | Routine tasks, isolation tests, backups, lessons learned |
+
 ## Planned Documentation
 
-- Rack layout and U positions
-- Network topology
-- Router/access-point configuration
-- pfSense firewall details
-- Switch model and configuration
-- Minisforum Docker host and container inventory
-- 24/7 AI server software and LLM configuration
-- Beelink Kali Linux configuration
-- Raspberry Pi OS and configuration
-- Hostnames and IP addressing
-- Power supplies and power distribution
-- PDU outlet assignments
-- Cooling and cable management
-- KVM port assignments
-- Backup and maintenance notes
+- [x] Network topology
+- [x] Router/access-point configuration
+- [x] pfSense firewall details
+- [x] Switch model and configuration
+- [x] Hostnames and IP addressing (example addressing only)
+- [x] Backup and maintenance notes
+- [ ] Rack layout and U positions
+- [ ] Minisforum Docker host and container inventory
+- [ ] 24/7 AI server software and LLM configuration
+- [ ] Beelink Kali Linux configuration
+- [ ] Raspberry Pi OS and configuration
+- [ ] Power supplies and power distribution
+- [ ] PDU outlet assignments
+- [ ] Cooling and cable management
+- [ ] KVM port assignments
 
 ## Security Note
 
