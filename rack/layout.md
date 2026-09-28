@@ -9,7 +9,7 @@
 
 ## Physical Equipment Order
 
-The current physical arrangement is documented from **top to bottom**. The Minisforum X1 Lite-255 AI server was added between the network switch and the Beelink home media server.
+The current physical arrangement is documented from **top to bottom**. The Minisforum X1 Lite-255 AI server was added between the network switch and the Beelink Kali box.
 
 | Order | Equipment | Role |
 |---|---|---|
@@ -18,7 +18,7 @@ The current physical arrangement is documented from **top to bottom**. The Minis
 | **3** | TP-Link TL-SG108E | 8-port managed Gigabit switch |
 | **4** | MINISFORUM X1 Lite-255 | AI server / 24/7 LLM |
 | **5** | Raspberry Pi 5 | Pi-hole ad blocker |
-| **6** | Beelink EQ Mini PC / Intel N150 | Jellyfin home media server |
+| **6** | Beelink EQ Mini PC / Intel N150 | Kali box / Lab zone |
 | **7** | Intel J1900 mini PC | pfSense router/firewall |
 | **8** | ElecVoztile PDU | Rack power distribution |
 | **9** | Noctua NF-F12 5V | Intake fan |
@@ -68,7 +68,7 @@ The lab also uses a **KCEVE 8-port HDMI KVM switch** for centralized local conso
 | KVM Port | Connected Computer | Role |
 |---|---|---|
 | **Port 1** | Intel J1900 mini PC | pfSense router/firewall |
-| **Port 2** | Beelink EQ Mini PC / N150 | Home media server / Jellyfin |
+| **Port 2** | Beelink EQ Mini PC / N150 | Kali box / Lab zone |
 | **Port 3** | Raspberry Pi 5 | Pi-hole ad blocker |
 | **Port 4** | Unassigned | Available |
 | **Port 5** | Unassigned | Available |
