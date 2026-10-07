@@ -61,7 +61,7 @@ The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP 
 
 | Document | Contents |
 |---|---|
-| [Network topology](network/topology.md) | Overview diagram and zones at a glance |
+| [Network topology](network/topology.md) | Overview diagram, zones at a glance, and a diagram of the zones and firewall flows |
 | [Zones (VLANs)](network/zones.md) | Subnets, DHCP, device placement, what each zone can reach |
 | [pfSense firewall](network/firewall.md) | Router hardening, per-zone rules, forced DNS, pfBlockerNG, Suricata, logging |
 | [DNS](network/dns.md) | Pi-hole → pfSense resolver with DNSSEC; blocking DNS bypass |
