@@ -59,6 +59,102 @@ This inventory is a work in progress. Specifications that have not yet been prov
 
 The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP reputation blocking and intrusion detection. All addresses in these documents are **example addresses**.
 
+### Physical layout
+
+How the firewall, switch and access point connect, and which zones each carries:
+
+```text
+                          Internet
+                             |
+                    ISP / upstream router
+                             |  (double NAT, WAN on a private network)
+                   +-------------------+
+                   |   pfSense 2.8.x   |  J1900, 4 × Intel i210
+                   |  WAN igb1         |  Suricata (WAN), pfBlockerNG (IP lists)
+                   |  LAN igb0 + VLANs |  DNS Resolver (DNSSEC)
+                   +---------+---------+
+                             | trunk: untagged 1, tagged 10/30/40/50
+                   +---------+---------+
+                   |  TP-Link TL-SG108E |  802.1Q VLANs
+                   +---------+---------+
+      +-------------+--------+--------+-------------+-------------+
+      |             |                 |             |             |
+  Servers (1)   Trusted (10)    Gaming/IoT (30)  Lab (40)    GL.iNet AP
+  Home lab srv  Desktop PC      Xbox             Beelink      untagged 10 →  "Home"
+  AI server                                      (Kali)       tagged 30    →  "Home-IoT"
+  Pi-hole                                                     tagged 50    →  "Home-Guest"
+```
+
+### Zones and firewall flows
+
+Arrows show who may **start** a connection (replies always return). Solid arrows are allowed, thick arrows are Trusted's full access, dotted arrows ending in ✕ are blocked by pfSense, and the dotted arrow to the home lab server is pfSense's log feed to Sentinel. Details are in [network/firewall.md](network/firewall.md).
+
+```mermaid
+flowchart TB
+    NET(("Internet"))
+    ISP["ISP / upstream router<br/>(double NAT)"]
+    PF{{"pfSense 2.8 · Intel J1900<br/>Suricata on WAN · pfBlockerNG IP lists<br/>DNS Resolver with DNSSEC<br/>NAT: any port 53 → Pi-hole"}}
+
+    NET --- ISP --- PF
+
+    subgraph SRV["Servers · VLAN 1 untagged · 10.20.1.0/24"]
+        HL["Home lab server<br/>Docker · Sentinel"]
+        AI["AI server"]
+        PH[("Pi-hole DNS<br/>10.20.1.53")]
+    end
+
+    subgraph TR["Trusted · VLAN 10 · 10.20.10.0/24"]
+        DT["Desktop PC"]
+        HW["Home Wi-Fi<br/>phones, laptops"]
+    end
+
+    subgraph IOT["Gaming & IoT · VLAN 30 · 10.20.30.0/24"]
+        XB["Xbox"]
+        IW["Home-IoT Wi-Fi"]
+    end
+
+    subgraph LAB["Lab · VLAN 40 · 10.20.40.0/24"]
+        KL["Beelink EQ<br/>Kali Linux"]
+    end
+
+    subgraph GST["Guest · VLAN 50 · 10.20.50.0/24"]
+        GW["Home-Guest Wi-Fi<br/>client isolation"]
+    end
+
+    %% Allowed: every zone reaches the internet through pfSense; only Servers and Trusted may use pfSense itself
+    SRV -->|internet + resolver| PF
+    TR -->|internet + router admin| PF
+    IOT -->|internet only| PF
+    LAB -->|internet only| PF
+    GST -->|internet only| PF
+
+    %% Allowed: Trusted may start connections anywhere
+    TR ==>|all services| SRV
+    TR ==> IOT
+    TR ==> LAB
+    TR ==> GST
+
+    %% Allowed: DNS only, from the restricted zones
+    IOT -->|DNS :53 only| PH
+    LAB -->|DNS :53 only| PH
+    GST -->|DNS :53 only| PH
+    PH -->|upstream DNS| PF
+    PF -.->|syslog UDP 5140| HL
+
+    %% Blocked: cannot start connections into other zones
+    SRV -.-x|blocked| TR
+    IOT -.-x|blocked| SRV
+    LAB -.-x|blocked| SRV
+    GST -.-x|blocked| SRV
+
+    classDef fw fill:#fde2e1,stroke:#c0392b,color:#000
+    classDef dns fill:#e3f2e1,stroke:#2e7d32,color:#000
+    class PF fw
+    class PH dns
+```
+
+### Network documents
+
 | Document | Contents |
 |---|---|
 | [Network topology](network/topology.md) | Overview diagram, zones at a glance, and a diagram of the zones and firewall flows |
@@ -69,7 +165,3 @@ The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP 
 | [Wi-Fi access point](network/wifi-ap.md) | GL.iNet Flint 3 multi-SSID VLAN setup in AP mode |
 | [Server hardening](network/server-hardening.md) | ufw, fail2ban, Docker/Portainer exposure |
 | [Maintenance](network/maintenance.md) | Routine tasks, isolation tests, backups, lessons learned |
-
-
-
-
