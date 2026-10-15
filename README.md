@@ -23,7 +23,7 @@ Documentation and inventory for the desk-mounted home lab / mini server rack.
 | Firewall | Intel J1900 mini PC | 4 × Intel i210 Ethernet, 4 GB RAM, 64 GB SSD | pfSense router/firewall |
 | Switch | TP-Link TL-SG108E | 8 × Gigabit Ethernet, managed | Network switching |
 | Home Lab Server | MINISFORUM X1 Lite-255 | AMD Ryzen 7 255, 8C/16T, up to 4.9 GHz, 32 GB DDR5, 1 TB SSD, Ubuntu Server | Uptime Kuma, Portainer, Docker containers, Stash Notes App |
-| AI Server | Desktop PC | Intel Core i5-13600K, RTX 4070 12 GB, 32 GB DDR5, 2 TB SSD | 24/7 AI server |
+| AI Server | Desktop PC | Intel Core i5-13600KF, RTX 4070 12 GB, 32 GB DDR5, 2 TB SSD | 24/7 AI server |
 | Computer | Beelink EQ Mini PC | Quad Core N150, 12 GB LPDDR5, 500 GB SSD + 2 TB Seagate SSD | Kali Linux workstation |
 | Computer | Raspberry Pi 5 | 8 GB RAM, 128 GB SSD | Pi-hole ad blocker |
 | Computer | Raspberry Pi 5 (vault) | WD Elements 2 TB USB boot drive, on pfSense igb2 | Vaultwarden password manager, isolated Vault zone |
