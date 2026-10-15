@@ -17,6 +17,8 @@
 | 7 | MINISFORUM home lab server | 1 | — |
 | 8 | AI server | 1 | — |
 
+The Vaultwarden Pi is **not** on the switch. It plugs straight into pfSense `igb2` (see [vault.md](vault.md)), so it didn't need a ninth switch port.
+
 ## VLAN membership table
 
 | VLAN | Name | Member ports | Tagged | Untagged |

@@ -23,6 +23,8 @@ The current physical arrangement is documented from **top to bottom**. The Minis
 | **8** | ElecVoztile PDU | Rack power distribution |
 | **9** | Noctua NF-F12 5V | Intake fan |
 
+> **Vault Pi:** the second Raspberry Pi 5 (Vaultwarden) is cabled straight to the pfSense J1900's `igb2` port. Its physical position in the rack is TBD.
+
 > **Rack capacity note:** The rack is rated at 8U, while the current physical equipment list contains 9 pieces of equipment. Several items (including the fans, PDU, and mini PCs) do not necessarily occupy a full conventional 1U rack space. The table therefore records the physical order rather than claiming that each item occupies exactly one rack unit.
 
 ## Airflow

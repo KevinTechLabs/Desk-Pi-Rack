@@ -26,6 +26,7 @@ Documentation and inventory for the desk-mounted home lab / mini server rack.
 | AI Server | Desktop PC | Intel Core i5-13600K, RTX 4070 12 GB, 32 GB DDR5, 2 TB SSD | 24/7 AI server |
 | Computer | Beelink EQ Mini PC | Quad Core N150, 12 GB LPDDR5, 500 GB SSD + 2 TB Seagate SSD | Kali Linux workstation |
 | Computer | Raspberry Pi 5 | 8 GB RAM, 128 GB SSD | Pi-hole ad blocker |
+| Computer | Raspberry Pi 5 (vault) | WD Elements 2 TB USB boot drive, on pfSense igb2 | Vaultwarden password manager, isolated Vault zone |
 | Peripheral | KCEVE 8-Port HDMI KVM Switch | 8 computers, 1 monitor, HDMI, 4K @ 60 Hz, USB 3.0, shared keyboard/mouse, hotkey switching | Computer/console access |
 
 ## MINISFORUM Home Lab Server
@@ -57,7 +58,7 @@ This inventory is a work in progress. Specifications that have not yet been prov
 
 ## Network & Security
 
-The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP reputation blocking and intrusion detection. All addresses in these documents are **example addresses**.
+The network is segmented into VLAN zones behind pfSense, with DNS filtering, IP reputation blocking and intrusion detection. The password manager has its own zone on a dedicated pfSense port, reachable only over Tailscale. All addresses in these documents are **example addresses**.
 
 ### Physical layout
 
@@ -72,7 +73,8 @@ How the firewall, switch and access point connect, and which zones each carries:
                    |   pfSense 2.8.x   |  J1900, 4 × Intel i210
                    |  WAN igb1         |  Suricata (WAN), pfBlockerNG (IP lists)
                    |  LAN igb0 + VLANs |  DNS Resolver (DNSSEC)
-                   +---------+---------+
+                   |  VAULT igb2  -----+----> Vault (60): Raspberry Pi 5, Vaultwarden
+                   +---------+---------+      own port, no switch, Tailscale-only access
                              | trunk: untagged 1, tagged 10/30/40/50
                    +---------+---------+
                    |  TP-Link TL-SG108E |  802.1Q VLANs
@@ -87,7 +89,7 @@ How the firewall, switch and access point connect, and which zones each carries:
 
 ### Zones and firewall flows
 
-Arrows show who may **start** a connection (replies always return). Solid arrows are allowed, thick arrows are Trusted's full access, dotted arrows ending in ✕ are blocked by pfSense, and the dotted arrow to the home lab server is pfSense's log feed to Sentinel. Details are in [network/firewall.md](network/firewall.md).
+Arrows show who may **start** a connection (replies always return). Solid arrows are allowed, thick arrows are Trusted's full access, dotted arrows ending in ✕ are blocked by pfSense, and the dotted arrow to the home lab server is pfSense's log feed to Sentinel. The vault (purple) is the exception to Trusted's full access: nothing on the LAN reaches it, and the only way in is Tailscale from personal devices. See [network/vault.md](network/vault.md). Details are in [network/firewall.md](network/firewall.md).
 
 ```mermaid
 flowchart TB
@@ -121,14 +123,21 @@ flowchart TB
         GW["Home-Guest Wi-Fi<br/>client isolation"]
     end
 
+    subgraph VLT["Vault · igb2 (own port) · 10.20.60.0/24"]
+        VW[("Raspberry Pi 5<br/>Vaultwarden")]
+    end
+
+    TS(["Tailscale<br/>personal devices only"])
+
     %% Allowed: every zone reaches the internet through pfSense; only Servers and Trusted may use pfSense itself
     SRV -->|internet + resolver| PF
     TR -->|internet + router admin| PF
     IOT -->|internet only| PF
     LAB -->|internet only| PF
     GST -->|internet only| PF
+    VLT -->|internet only| PF
 
-    %% Allowed: Trusted may start connections anywhere
+    %% Allowed: Trusted may start connections anywhere except the vault
     TR ==>|all services| SRV
     TR ==> IOT
     TR ==> LAB
@@ -138,6 +147,7 @@ flowchart TB
     IOT -->|DNS :53 only| PH
     LAB -->|DNS :53 only| PH
     GST -->|DNS :53 only| PH
+    VLT -->|DNS :53 only| PH
     PH -->|upstream DNS| PF
     PF -.->|syslog UDP 5140| HL
 
@@ -146,11 +156,18 @@ flowchart TB
     IOT -.-x|blocked| SRV
     LAB -.-x|blocked| SRV
     GST -.-x|blocked| SRV
+    TR -.-x|blocked| VLT
+    SRV -.-x|blocked| VLT
+
+    %% The only way into the vault: HTTPS and SSH over Tailscale from personal devices
+    TS ==>|HTTPS / SSH| VW
 
     classDef fw fill:#fde2e1,stroke:#c0392b,color:#000
     classDef dns fill:#e3f2e1,stroke:#2e7d32,color:#000
+    classDef vault fill:#e8e4fb,stroke:#5b3fc4,color:#000
     class PF fw
     class PH dns
+    class VW,TS vault
 ```
 
 ### Network documents
@@ -164,4 +181,5 @@ flowchart TB
 | [Switch](network/switch.md) | TL-SG108E 802.1Q VLANs and port map |
 | [Wi-Fi access point](network/wifi-ap.md) | GL.iNet Flint 3 multi-SSID VLAN setup in AP mode |
 | [Server hardening](network/server-hardening.md) | ufw, fail2ban, Docker/Portainer exposure |
+| [Vault zone](network/vault.md) | Vaultwarden on a dedicated Pi: own pfSense port, Tailscale-only access, encrypted backups |
 | [Maintenance](network/maintenance.md) | Routine tasks, isolation tests, backups, lessons learned |

@@ -69,6 +69,26 @@ sudo ufw allow from 10.20.10.0/24 to any port 3100,11434 proto tcp
 
 > Tip: before adding a rule, check the prompt/hostname. The AI server and the home lab server have similar terminal setups, and the first attempt landed on the wrong machine.
 
+## Vault Pi (Vault zone)
+
+Dedicated to Vaultwarden. Full details in [vault.md](vault.md).
+
+- **ufw:** default deny incoming; only `tailscale0` allowed. No LAN SSH.
+- **SSH:** keys only, root login and password/keyboard-interactive auth off, `AllowUsers` set.
+- **Vaultwarden:** published on `127.0.0.1:8080` only and served over HTTPS by `tailscale serve`. Sign-ups off, admin page disabled.
+- **Nothing else installed:** no NexusLab agent, no Portainer agent.
+- **unattended-upgrades** on.
+
+## Tailscale policy
+
+Servers (home lab, AI servers, Pi-hole, Kali) carry `tag:server`. The vault carries `tag:vault`. Personal devices are untagged.
+
+| Grant | Effect |
+|---|---|
+| `autogroup:member` → `*` | Personal devices reach everything, including the vault |
+| `tag:server` → `tag:server` | Servers reach each other |
+| *(none to `tag:vault`)* | Servers can't reach the vault, even over Tailscale |
+
 ## Kali (Lab zone)
 
 Isolated in VLAN 40: internet and DNS only. Keep it updated (`apt full-upgrade`), leave SSH off unless needed, and change default credentials.

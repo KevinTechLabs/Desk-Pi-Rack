@@ -19,8 +19,8 @@
 
 | Bypass attempt | Countermeasure |
 |---|---|
-| Hard-coded DNS server (`8.8.8.8`, `1.1.1.1`, ...) | pfSense NAT redirect: port 53 to anything but Pi-hole is rewritten to Pi-hole (Trusted, IoT, Lab, Guest) |
-| DNS-over-TLS (port 853) | Blocked on IoT, Lab and Guest |
+| Hard-coded DNS server (`8.8.8.8`, `1.1.1.1`, ...) | pfSense NAT redirect: port 53 to anything but Pi-hole is rewritten to Pi-hole (Trusted, IoT, Lab, Guest, Vault) |
+| DNS-over-TLS (port 853) | Blocked on IoT, Lab, Guest and Vault |
 | DNS-over-HTTPS in browsers | Pi-hole's default lists include the Firefox canary domain; other DoH can't be blocked by port |
 
 Test from a Lab device: `nslookup example.com 8.8.8.8` still answers, and the query shows up in Pi-hole's Query Log from the Lab address.

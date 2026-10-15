@@ -4,7 +4,7 @@
 
 - **Hardware:** Intel J1900 mini PC, 4 × Intel i210 (`igb0`–`igb3`), 4 GB RAM
 - **Software:** pfSense CE 2.8.x
-- **Interfaces:** `igb1` = WAN (DHCP from the upstream router), `igb0` = LAN trunk (VLAN 1 untagged + VLANs 10/30/40/50 tagged), `igb2`/`igb3` unused
+- **Interfaces:** `igb1` = WAN (DHCP from the upstream router), `igb0` = LAN trunk (VLAN 1 untagged + VLANs 10/30/40/50 tagged), `igb2` = VAULT (untagged, one device), `igb3` unused
 
 ## 1. Hardening the router itself
 
@@ -41,7 +41,8 @@ pfSense evaluates rules top to bottom per interface, and the first match wins.
 
 | # | Action | Source | Destination | Purpose |
 |---|---|---|---|---|
-| 1 | Pass | TRUSTED net | any | Own devices reach everything |
+| 1 | Block (log) | TRUSTED net | VAULT net | Vault: Tailscale only |
+| 2 | Pass | TRUSTED net | any | Own devices reach everything else |
 
 ### IOT, LAB, GUEST (identical pattern)
 
@@ -53,15 +54,28 @@ pfSense evaluates rules top to bottom per interface, and the first match wins.
 | 4 | Block | any | This Firewall | No router admin or services (DHCP still works via pfSense's built-in rules) |
 | 5 | Pass | any | any | Internet |
 
+### VAULT
+
+| # | Action | Proto | Destination | Purpose |
+|---|---|---|---|---|
+| 1 | Block | TCP/UDP | any :853 | No DNS-over-TLS around Pi-hole |
+| 2 | Pass | TCP/UDP | Pi-hole :53 | DNS |
+| 3 | Block (log) | any | `PRIVATE_NETS` | No other zones |
+| 4 | Block (log) | any | This Firewall | No router admin |
+| 5 | Pass | any | any | Internet (updates, Tailscale, encrypted backups) |
+
+Same pattern as IoT/Lab/Guest, with logging on the blocks. Details in [vault.md](vault.md).
+
 ### Tested results
 
 From the Lab zone: internet ✅, DNS ✅, home lab server ❌, pfSense admin ❌, desktop PC ❌.
 From the Servers zone: internet ✅, desktop PC ❌, Xbox ❌.
-From Trusted: every service on the servers ✅.
+From Trusted: every service on the servers ✅, vault ❌ (Tailscale only).
+From the Vault zone: internet ✅, DNS ✅, Trusted ❌, Pi-hole other than DNS ❌, pfSense ❌.
 
 ## 4. NAT: forced DNS
 
-Firewall → NAT → Port Forward, one rule per zone (TRUSTED, IOT, LAB, GUEST):
+Firewall → NAT → Port Forward, one rule per zone (TRUSTED, IOT, LAB, GUEST, VAULT):
 
 - Protocol TCP/UDP, destination **NOT** Pi-hole, port 53
 - Redirect target: Pi-hole, port 53
@@ -72,7 +86,7 @@ A device with hard-coded DNS (for example `8.8.8.8`) silently gets Pi-hole's ans
 ## 5. pfBlockerNG-devel (IP reputation blocking)
 
 - **Mode:** IP blocking only. **DNSBL is off**, so Pi-hole stays the single DNS filter and filtering doesn't stack inside the resolver Pi-hole depends on.
-- **IP settings:** inbound interface WAN; outbound interfaces LAN + all VLANs; floating rules on; de-duplication and aggregation on; kill states on update.
+- **IP settings:** inbound interface WAN; outbound interfaces LAN + all VLANs + VAULT; floating rules on; de-duplication and aggregation on; kill states on update.
 - **Feeds (group PRI1, action *Deny Both*, refresh every 4 h):** Abuse.ch Feodo C2, CINS Army, ET Block, ET Compromised, ISC Block, Spamhaus DROP. Pulsedive is left off.
 - **Size at install:** about 13,000 addresses.
 - The setup wizard was skipped on purpose (`pfblockerng_general.php?wizard=skip`), because it also enables DNSBL.

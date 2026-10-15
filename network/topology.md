@@ -15,7 +15,8 @@ pfSense on the Intel J1900 is the router and firewall for the whole desk lab. Th
                    |   pfSense 2.8.x   |  J1900, 4 × Intel i210
                    |  WAN igb1         |  Suricata (WAN), pfBlockerNG (IP lists)
                    |  LAN igb0 + VLANs |  DNS Resolver (DNSSEC)
-                   +---------+---------+
+                   |  VAULT igb2  -----+----> Vault (60): Raspberry Pi 5, Vaultwarden
+                   +---------+---------+      own port, no switch, Tailscale-only access
                              | trunk: untagged 1, tagged 10/30/40/50
                    +---------+---------+
                    |  TP-Link TL-SG108E |  802.1Q VLANs
@@ -33,16 +34,17 @@ pfSense on the Intel J1900 is the router and firewall for the whole desk lab. Th
 | Zone | VLAN | Example subnet | Devices | Can reach |
 |---|---|---|---|---|
 | Servers (main LAN) | 1 (untagged) | 10.20.1.0/24 | Home lab server, AI server, Pi-hole, switch management | Internet, pfSense services. Cannot start connections into other zones |
-| Trusted | 10 | 10.20.10.0/24 | Desktop PC, phone and laptops on "Home" Wi-Fi, AP management | Everything |
+| Trusted | 10 | 10.20.10.0/24 | Desktop PC, phone and laptops on "Home" Wi-Fi, AP management | Everything except the Vault zone |
 | Gaming & IoT | 30 | 10.20.30.0/24 | Xbox, "Home-IoT" Wi-Fi | Internet and Pi-hole DNS only |
 | Lab | 40 | 10.20.40.0/24 | Beelink EQ (Kali Linux) | Internet and Pi-hole DNS only |
 | Guest | 50 | 10.20.50.0/24 | "Home-Guest" Wi-Fi (client isolation on) | Internet and Pi-hole DNS only |
+| Vault | — (pfSense igb2) | 10.20.60.0/24 | Raspberry Pi 5 running Vaultwarden | Internet and Pi-hole DNS only. Reachable only over Tailscale from personal devices |
 
 Replies to allowed connections always come back through the firewall's state table. That's why Trusted devices can use services in the Servers zone even though servers can't start connections into Trusted.
 
 ## Zones and firewall flows
 
-Arrows show who may **start** a connection (replies always return). Solid arrows are allowed, thick arrows are Trusted's full access, dotted arrows ending in ✕ are blocked by pfSense, and the dotted arrow to the home lab server is pfSense's log feed to Sentinel. The rules behind each arrow are in [firewall.md](firewall.md).
+Arrows show who may **start** a connection (replies always return). Solid arrows are allowed, thick arrows are Trusted's full access, dotted arrows ending in ✕ are blocked by pfSense, and the dotted arrow to the home lab server is pfSense's log feed to Sentinel. The vault (purple) is the exception to Trusted's full access: nothing on the LAN reaches it, and the only way in is Tailscale from personal devices. See [network/vault.md](vault.md). The rules behind each arrow are in [firewall.md](firewall.md).
 
 ```mermaid
 flowchart TB
@@ -76,14 +78,21 @@ flowchart TB
         GW["Home-Guest Wi-Fi<br/>client isolation"]
     end
 
+    subgraph VLT["Vault · igb2 (own port) · 10.20.60.0/24"]
+        VW[("Raspberry Pi 5<br/>Vaultwarden")]
+    end
+
+    TS(["Tailscale<br/>personal devices only"])
+
     %% Allowed: every zone reaches the internet through pfSense; only Servers and Trusted may use pfSense itself
     SRV -->|internet + resolver| PF
     TR -->|internet + router admin| PF
     IOT -->|internet only| PF
     LAB -->|internet only| PF
     GST -->|internet only| PF
+    VLT -->|internet only| PF
 
-    %% Allowed: Trusted may start connections anywhere
+    %% Allowed: Trusted may start connections anywhere except the vault
     TR ==>|all services| SRV
     TR ==> IOT
     TR ==> LAB
@@ -93,6 +102,7 @@ flowchart TB
     IOT -->|DNS :53 only| PH
     LAB -->|DNS :53 only| PH
     GST -->|DNS :53 only| PH
+    VLT -->|DNS :53 only| PH
     PH -->|upstream DNS| PF
     PF -.->|syslog UDP 5140| HL
 
@@ -101,11 +111,18 @@ flowchart TB
     IOT -.-x|blocked| SRV
     LAB -.-x|blocked| SRV
     GST -.-x|blocked| SRV
+    TR -.-x|blocked| VLT
+    SRV -.-x|blocked| VLT
+
+    %% The only way into the vault: HTTPS and SSH over Tailscale from personal devices
+    TS ==>|HTTPS / SSH| VW
 
     classDef fw fill:#fde2e1,stroke:#c0392b,color:#000
     classDef dns fill:#e3f2e1,stroke:#2e7d32,color:#000
+    classDef vault fill:#e8e4fb,stroke:#5b3fc4,color:#000
     class PF fw
     class PH dns
+    class VW,TS vault
 ```
 
 ## Related documents
@@ -118,6 +135,7 @@ flowchart TB
 | [switch.md](switch.md) | TL-SG108E 802.1Q VLANs and port map |
 | [wifi-ap.md](wifi-ap.md) | GL.iNet Flint 3 as a multi-SSID VLAN access point |
 | [server-hardening.md](server-hardening.md) | ufw, fail2ban, Docker and Portainer exposure |
+| [vault.md](vault.md) | Vault zone: dedicated Pi, pfSense and Tailscale rules, backups |
 | [maintenance.md](maintenance.md) | Routine tasks, backups, recovery and lessons learned |
 
 ## Monitoring
