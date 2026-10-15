@@ -15,6 +15,7 @@ Before the split, every device shared one flat network, so a compromised console
 | Gaming & IoT | 30 | `IOT` (igb0.30) | 10.20.30.1 | .100 – .200 | Pi-hole |
 | Lab | 40 | `LAB` (igb0.40) | 10.20.40.1 | .100 – .200 | Pi-hole |
 | Guest | 50 | `GUEST` (igb0.50) | 10.20.50.1 | .100 – .200 | Pi-hole |
+| Vault | — (own port) | `VAULT` (igb2) | 10.20.60.1 | .100 – .200 (Pi fixed at .10) | Pi-hole |
 
 The servers and Pi-hole keep their existing addresses on the untagged main LAN, so nothing that points at them had to change.
 
@@ -22,15 +23,18 @@ The servers and Pi-hole keep their existing addresses on the untagged main LAN, 
 
 ## What each zone may reach
 
-| From ↓ / To → | Internet | Pi-hole DNS | Servers | Trusted | IoT / Lab / Guest | pfSense itself |
-|---|---|---|---|---|---|---|
-| Trusted | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Servers | ✅ | ✅ (same LAN) | ✅ (same LAN) | ❌ | ❌ | ✅ |
-| Gaming & IoT | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
-| Lab | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
-| Guest | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
+| From ↓ / To → | Internet | Pi-hole DNS | Servers | Trusted | IoT / Lab / Guest | Vault | pfSense itself |
+|---|---|---|---|---|---|---|---|
+| Trusted | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ (Tailscale only) | ✅ |
+| Servers | ✅ | ✅ (same LAN) | ✅ (same LAN) | ❌ | ❌ | ❌ | ✅ |
+| Gaming & IoT | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
+| Lab | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
+| Guest | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ (DHCP only) |
+| Vault | ✅ | ✅ | ❌ | ❌ | ❌ | — | ❌ (DHCP only) |
 
 "❌" means the zone can't **start** a connection. Replies to connections that a permitted zone started always return.
+
+The Vault zone is reached only over Tailscale, from personal devices. Servers are tagged in Tailscale and get no grant to it. See [vault.md](vault.md).
 
 ## Device placement
 
@@ -39,6 +43,7 @@ The servers and Pi-hole keep their existing addresses on the untagged main LAN, 
 | MINISFORUM X1 Lite-255 (home lab server) | Servers | Switch port 7 |
 | AI server (i5-13600K / RTX 4070) | Servers | Switch port 8 |
 | Raspberry Pi 5 (Pi-hole) | Servers | Switch port 4 |
+| Raspberry Pi 5 (Vaultwarden) | Vault | pfSense igb2 (not on the switch) |
 | TP-Link TL-SG108E management | Servers | — |
 | Desktop PC (daily driver) | Trusted | Switch port 3 |
 | Phones and laptops | Trusted | "Home" Wi-Fi |

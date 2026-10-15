@@ -127,7 +127,7 @@
 - **Additional storage use:** 2 TB Seagate SSD
 - **Management address:** TBD
 
-### Raspberry Pi 5
+### Raspberry Pi 5 (Pi-hole)
 
 - **Category:** Single-board computer
 - **Model:** Raspberry Pi 5
@@ -138,6 +138,20 @@
 - **Services:** Pi-hole ad blocker
 - **Management address:** TBD
 - **Cooling:** TBD
+
+### Raspberry Pi 5 (Vault)
+
+- **Category:** Single-board computer
+- **Model:** Raspberry Pi 5
+- **RAM:** TBD
+- **Storage:** WD Elements 2 TB USB drive (boot drive, no SD card)
+- **Operating system:** Raspberry Pi OS Lite (64-bit)
+- **Primary role:** Vaultwarden password manager
+- **Services:** Vaultwarden (Docker), Tailscale, encrypted backups to Google Drive (rclone crypt)
+- **Network:** Directly on pfSense `igb2`, Vault zone (not on the switch)
+- **Access:** Tailscale only, from personal devices
+- **Cooling:** TBD
+- **Details:** [network/vault.md](../network/vault.md)
 
 ## Console / Peripheral Management
 
@@ -175,7 +189,8 @@
 - Beelink management address
 - Minisforum server management address and Docker container inventory
 - AI server operating system, management address, and AI/LLM software
-- Raspberry Pi 5 operating system, management address, and cooling
+- Raspberry Pi 5 (Pi-hole) operating system, management address, and cooling
+- Raspberry Pi 5 (Vault) RAM, cooling, rack position and KVM port
 - Hostnames
 - IP addresses / VLANs
 - Power connections and PDU outlet assignments

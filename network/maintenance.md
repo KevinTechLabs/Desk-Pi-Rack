@@ -6,6 +6,7 @@
 |---|---|
 | Daily | Glance at Sentinel's Discord summary |
 | Monthly | pfSense and Pi-hole updates (`pihole -up`), then download a fresh pfSense config backup and store it **offline** |
+| Monthly | Vault Pi: `docker compose pull && docker compose up -d`; check `/var/log/vw-backup.log` and `rclone ls vaultbackup:` |
 | Every few months | TL-SG108E and GL.iNet firmware |
 | After any change | Re-run the isolation tests below |
 
@@ -21,11 +22,15 @@
 | Forced DNS | Lab: `nslookup example.com 8.8.8.8` | Answers; appears in Pi-hole's Query Log |
 | DoT blocked | Lab: `timeout 5 bash -c '</dev/tcp/1.1.1.1/853'` | Fails |
 | Nothing open inbound | Phone on mobile data: online port scan of the public IP | All ports stealth or closed |
+| Vault isolated from LAN | Desktop: `ping <vault>`; vault: ping the desktop and Pi-hole | All fail |
+| Servers can't reach the vault | Home lab or AI server: `curl -m5 -k https://<vault Tailscale IP>` | Times out |
+| Vault reachable over Tailscale | Desktop `ssh <user>@vault`; Bitwarden sync on the phone | Both work |
 
 ## Backups
 
 - **pfSense:** Diagnostics → Backup & Restore → Download configuration. The file contains password hashes and the full rule set, so store it privately (password manager or encrypted drive). **Never commit it here.**
 - **GL.iNet:** the VLAN script keeps copies in `/root/vlan-backup/` on the device.
+- **Vaultwarden:** every other day, `sqlite3 .backup` plus keys and attachments. 30 days kept locally, 90 days in Google Drive through an rclone `crypt` remote. The crypt passwords are stored outside the vault. See [vault.md](vault.md).
 
 ## Recovery
 
@@ -43,3 +48,5 @@
 6. **Broadcast name lookups don't cross VLANs.** Use Pi-hole Local DNS records.
 7. **Pick zone subnets that don't overlap the upstream router's network.**
 8. **Keep a backup of the config before every change session,** and make changes in an order where each step is reversible (create VLANs in pfSense first, tag the trunk ports, then move one device at a time).
+9. **Start Vaultwarden only after its data is restored.** A failed copy step left the data folder empty, and the container came up as a blank vault. Sign-ups were already off, so it was harmless. See [vault.md](vault.md).
+10. **A pfSense interface set to /32 has no subnet,** so there's no DHCP tab for it. Use /24.
